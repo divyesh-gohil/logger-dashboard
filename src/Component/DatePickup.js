@@ -10,13 +10,15 @@ import ClearIcon from "@mui/icons-material/Clear";
 export default function DatePickup({
   lable,
   val,
+  setVal,
   searchParam,
   setsearchParam,
 }) {
   const handleChange = (newValue) => {
-    lable == "From Date" && searchParam.set("from", newValue);
-    lable == "To Date" && searchParam.set("to", newValue);
-    setsearchParam(searchParam);
+    // lable == "From Date" && searchParam.set("from", newValue);
+    // lable == "To Date" && searchParam.set("to", newValue);
+    // setsearchParam(searchParam);
+    setVal(dayjs(newValue).format("YYYY-MM-DD"));
   };
 
   return (
@@ -38,9 +40,10 @@ export default function DatePickup({
                   right: "2rem",
                 }}
                 onClick={() => {
-                  lable == "From Date" && searchParam.delete("from");
-                  lable == "To Date" && searchParam.delete("to");
-                  setsearchParam(searchParam);
+                  // lable == "From Date" && searchParam.delete("from");
+                  // lable == "To Date" && searchParam.delete("to");
+                  // setsearchParam(searchParam);
+                  setVal("");
                 }}
               >
                 <ClearIcon />
@@ -52,13 +55,3 @@ export default function DatePickup({
     </LocalizationProvider>
   );
 }
-
-// const clearFilter = () => {
-//   setLogId("");
-//   setAppId("");
-//   setAppType("");
-//   setActionType("");
-//   setFrom("");
-//   setTo("");
-//   setFilteredData(resp);
-// };
