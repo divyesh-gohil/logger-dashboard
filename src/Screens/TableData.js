@@ -24,11 +24,7 @@ import {
 } from "@mui/material";
 
 import { getTableData } from "../CallApi/GetTableData";
-import {
-  alphabetically,
-  getComparator,
-  TableHeader,
-} from "../Component/TableHeader";
+import { getComparator, TableHeader } from "../Component/TableHeader";
 import DatePickup from "../Component/DatePickup";
 
 export default function TableData() {
@@ -81,36 +77,18 @@ export default function TableData() {
     setsearchParam(searchParam);
     setPage(0);
 
-    // if (
-    //   logId === "" &&
-    //   appId === "" &&
-    //   appType === "" &&
-    //   actionType === "" &&
-    //   from === "" &&
-    //   to === ""
-    // ) {
-    //   // consokle.log(resp);
-    //   setFilteredData(resp);
-    // } else {
-    // let filteredData = [];
-
     if (!logId && !appId && !appType & !actionType && !from && !to) {
       setFilteredData(resp);
     } else {
       let filteredData = resp.filter((el) => {
-        console.log(
-          el?.logId,
-          logId,
-          el?.logId.toString()?.includes(logId?.toString())
-        );
         return (
           (logId &&
             el?.logId?.toString().trim()?.includes(logId?.toString())) ||
           (appId &&
             el?.applicationId?.toString()?.includes(appId.toString())) ||
-          el?.applicationType?.toString() == appType?.toString() ||
+          el?.applicationType?.toString() === appType?.toString() ||
           (el?.actionType != null &&
-            el?.actionType?.toString() == actionType?.toString()) ||
+            el?.actionType?.toString() === actionType?.toString()) ||
           (from &&
             dayjs(el.creationTimestamp).format("YYYY-MM-DD") ===
               dayjs(from).format("YYYY-MM-DD")) ||
@@ -125,15 +103,9 @@ export default function TableData() {
               dayjs(from).format("YYYY-MM-DD"))
         );
       });
-      console.log(filteredData);
       setFilteredData(filteredData);
     }
-    // }
   };
-
-  // useEffect(() => {
-  //   applyFilter();
-  // }, [logId, appId, appType, actionType, from, to]);
 
   useEffect(() => {
     const callAPI = async () => {
@@ -148,6 +120,7 @@ export default function TableData() {
 
   useEffect(() => {
     window.onpopstate = (e) => {
+      console.log("run");
       const logIdParam = searchParam.get("logId");
       const appIdParam = searchParam.get("appId");
       const appTypeParam = searchParam.get("appType");
@@ -155,14 +128,6 @@ export default function TableData() {
       const fromParam = searchParam.get("from");
       const toParam = searchParam.get("to");
 
-      console.log(
-        logIdParam,
-        appIdParam,
-        appTypeParam,
-        actionTypeParam,
-        fromParam,
-        toParam
-      );
       logIdParam === null && setLogId("");
       appIdParam === null && setAppId("");
       appTypeParam == null && setAppType("");
@@ -170,22 +135,7 @@ export default function TableData() {
       fromParam === null && setFrom("");
       toParam === null && setTo("");
     };
-  }, [searchParam, logId, appId, appType, actionType, from, to]);
-
-  // useEffect(() => {
-  // const logIdParam = searchParam?.get("logId");
-  // const appIdParam = searchParam.get("appId");
-  // const appTypeParam = searchParam.get("appType");
-  // const actionTypeParam = searchParam.get("actionType");
-  // const fromParam = searchParam.get("from");
-  // const toParam = searchParam.get("to");
-  // setLogId(logIdParam ? logIdParam : "");
-  // setAppId(appIdParam ? appIdParam : "");
-  // setAppType(appTypeParam ? appTypeParam : "");
-  // setActionType(actionTypeParam ? actionTypeParam : "");
-  // setFrom(fromParam ? fromParam : "");
-  // setTo(toParam ? toParam : "");
-  // }, [searchParam, logId]);
+  }, []);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -213,8 +163,6 @@ export default function TableData() {
               variant="outlined"
               onChange={(e) => {
                 setLogId(e.target.value);
-                // searchParam.set("logId", e.target.value);
-                // setsearchParam(searchParam);
               }}
               InputProps={
                 logId && {
@@ -241,8 +189,6 @@ export default function TableData() {
               variant="outlined"
               onChange={(e) => {
                 setAppId(e.target.value);
-                // searchParam.set("appId", e.target.value);
-                // setsearchParam(searchParam);
               }}
               InputProps={
                 appId && {
@@ -263,17 +209,12 @@ export default function TableData() {
             />
 
             <FormControl sx={{ m: 1, minWidth: 200 }}>
-              <InputLabel id="demo-simple-select-readonly-label">
-                Application Type
-              </InputLabel>
+              <InputLabel>Application Type</InputLabel>
               <Select
                 value={appType}
                 label="Application Type"
                 onChange={(e) => {
-                  // console.log(e.target.value);
                   setAppType(e.target.value);
-                  // searchParam.set("appType", e.target.value);
-                  // setsearchParam(searchParam);
                 }}
                 endAdornment={
                   appType && (
@@ -303,16 +244,12 @@ export default function TableData() {
             </FormControl>
 
             <FormControl sx={{ m: 1, minWidth: 200 }}>
-              <InputLabel id="demo-simple-select-readonly-label">
-                Action Type
-              </InputLabel>
+              <InputLabel>Action Type</InputLabel>
               <Select
                 value={actionType}
                 label="Action Type"
                 onChange={(e) => {
                   setActionType(e.target.value);
-                  // searchParam.set("actionType", e.target.value);
-                  // setsearchParam(searchParam);
                 }}
                 endAdornment={
                   actionType && (
@@ -348,6 +285,7 @@ export default function TableData() {
                 setVal={setFrom}
                 searchParam={searchParam}
                 setsearchParam={setsearchParam}
+                to={to}
               />
             </FormControl>
 
@@ -358,6 +296,7 @@ export default function TableData() {
                 setsearchParam={setsearchParam}
                 val={to}
                 setVal={setTo}
+                from={from}
               />
             </FormControl>
 
@@ -366,23 +305,11 @@ export default function TableData() {
                 Search Logger
               </Button>
             </FormControl>
-            {/* <FormControl sx={{ m: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={clearFilter}
-              disabled={
-                !logId && !appId && !appType && !actionType && !from && !to
-              }
-            >
-              Clear Filters
-            </Button>
-          </FormControl> */}
           </Paper>
 
           <TableContainer>
             <Table sx={{ minWidth: 750 }}>
               <TableHeader
-                // headCells={headCells}
                 order={order}
                 orderBy={orderBy}
                 onRequestSort={handleSort}

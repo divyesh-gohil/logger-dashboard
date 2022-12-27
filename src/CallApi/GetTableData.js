@@ -6,7 +6,6 @@ export const getTableData = async () => {
     let res = await makeAPIcall(GET_URL, "GET", "", "");
     return res;
   } catch (e) {
-    // console.log(e);
     throw new Error("Something went wrong");
   }
 };

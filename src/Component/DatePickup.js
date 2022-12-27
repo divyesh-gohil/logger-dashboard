@@ -7,23 +7,17 @@ import dayjs from "dayjs";
 import { IconButton } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 
-export default function DatePickup({
-  lable,
-  val,
-  setVal,
-  searchParam,
-  setsearchParam,
-}) {
+export default function DatePickup({ lable, val, setVal, from, to }) {
   const handleChange = (newValue) => {
-    // lable == "From Date" && searchParam.set("from", newValue);
-    // lable == "To Date" && searchParam.set("to", newValue);
     // setsearchParam(searchParam);
-    setVal(dayjs(newValue).format("YYYY-MM-DD"));
+    setVal(dayjs(newValue).format("YYYY-MM-DD hh:mm"));
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DesktopDatePicker
+        minDate={from ? new Date(from) : ""}
+        maxDate={to ? new Date(to) : ""}
         label={lable}
         inputFormat="YYYY-MM-DD"
         value={val ? val : null}
@@ -40,9 +34,6 @@ export default function DatePickup({
                   right: "2rem",
                 }}
                 onClick={() => {
-                  // lable == "From Date" && searchParam.delete("from");
-                  // lable == "To Date" && searchParam.delete("to");
-                  // setsearchParam(searchParam);
                   setVal("");
                 }}
               >
