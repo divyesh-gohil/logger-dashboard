@@ -59,13 +59,15 @@ export function TableHeader(props) {
 export function getComparator(order, orderBy) {
   return order === "desc"
     ? (a, b) => {
-        if (b[orderBy] < a[orderBy]) return -1;
-        if (b[orderBy] > a[orderBy]) return 1;
-        return 0;
+        if (a[orderBy] === null) return 1;
+        if (b[orderBy] === null) return -1;
+        if (a[orderBy] === b[orderBy]) return 0;
+        return a[orderBy] < b[orderBy] ? 1 : -1;
       }
     : (a, b) => {
-        if (b[orderBy] > a[orderBy]) return -1;
-        if (b[orderBy] < a[orderBy]) return 1;
-        return 0;
+        if (a[orderBy] === null) return 1;
+        if (b[orderBy] === null) return -1;
+        if (a[orderBy] === b[orderBy]) return 0;
+        return a[orderBy] < b[orderBy] ? -1 : 1;
       };
 }
