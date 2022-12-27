@@ -114,6 +114,7 @@ export default function TableData() {
       await setResp(resp?.data?.result?.auditLog);
       await setFilteredData(resp?.data?.result?.auditLog);
       await setLoading(false);
+      console.log("  ");
     };
     callAPI();
   }, []);
