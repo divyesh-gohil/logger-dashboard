@@ -91,8 +91,12 @@ export default function TableData() {
 
       const filteredData = () => {
         return resp
-          .filter((ele) => (logId ? ele.logId.toString().includes(logId) : ele))
-          .filter((ele) => (appId ? ele.appId.toString().includes(appId) : ele))
+          .filter((ele) =>
+            logId ? ele.logId?.toString().includes(logId) : ele
+          )
+          .filter((ele) =>
+            appId ? ele.applicationId?.toString().includes(appId) : ele
+          )
           .filter((ele) =>
             appType.length > 0 ? ele?.applicationType?.includes(appType) : ele
           )
@@ -118,7 +122,7 @@ export default function TableData() {
       };
       setFilteredData(filteredData);
       setPage(0);
-      console.log(filteredData);
+      // console.log(filteredData);
     }
   };
 

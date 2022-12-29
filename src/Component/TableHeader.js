@@ -56,13 +56,24 @@ export function TableHeader(props) {
   );
 }
 
+export function getComparator(order, orderBy) {
+  if (orderBy === "applicationType") {
+    return (a, b) => {
+      if (a.applicationType < b.applicationType)
+        return order === "asc" ? -1 : 1;
+      if (a.applicationType === null) return order === "asc" ? -1 : 1;
+      return order === "asc" ? 1 : -1;
+    };
+  } else {
+    return order === "desc"
+      ? (a, b) => descendingComparator(a, b, orderBy)
+      : (a, b) => -descendingComparator(a, b, orderBy);
+  }
+}
+
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
+  if (b[orderBy] < a[orderBy]) return -1;
+  if (b[orderBy] > a[orderBy]) return 1;
   return 0;
 }
 
@@ -72,18 +83,18 @@ function descendingComparator(a, b, orderBy) {
 //     : (a, b) => -descendingComparator(a, b, orderBy);
 // }
 
-export function getComparator(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => {
-        if (a[orderBy] === null) return 1;
-        if (b[orderBy] === null) return -1;
-        if (a[orderBy] === b[orderBy]) return 0;
-        return a[orderBy] < b[orderBy] ? 1 : -1;
-      }
-    : (a, b) => {
-        if (a[orderBy] === null) return 1;
-        if (b[orderBy] === null) return -1;
-        if (a[orderBy] === b[orderBy]) return 0;
-        return a[orderBy] < b[orderBy] ? -1 : 1;
-      };
-}
+// export function getComparator(order, orderBy) {
+//   return order === "desc"
+//     ? (a, b) => {
+//         if (a[orderBy] === null) return 1;
+//         if (b[orderBy] === null) return -1;
+//         if (a[orderBy] === b[orderBy]) return 0;
+//         return a[orderBy] < b[orderBy] ? 1 : -1;
+//       }
+//     : (a, b) => {
+//         if (a[orderBy] === null) return 1;
+//         if (b[orderBy] === null) return -1;
+//         if (a[orderBy] === b[orderBy]) return 0;
+//         return a[orderBy] < b[orderBy] ? -1 : 1;
+//       };
+// }
