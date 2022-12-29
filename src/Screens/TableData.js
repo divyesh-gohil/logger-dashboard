@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -26,9 +27,6 @@ import {
 import { getTableData } from "../CallApi/GetTableData";
 import { getComparator, TableHeader } from "../Component/TableHeader";
 import DatePickup from "../Component/DatePickup";
-import { type } from "@testing-library/user-event/dist/type";
-import { Login } from "@mui/icons-material";
-import { set } from "date-fns";
 
 export default function TableData() {
   const [order, setOrder] = useState("");
@@ -41,8 +39,13 @@ export default function TableData() {
   const [filteredArray, setFilteredData] = useState([]);
 
   const [searchParam, setsearchParam] = useSearchParams();
-  const param = Object.fromEntries([...searchParam]);
+  const param = useMemo(
+    () => Object.fromEntries([...searchParam]),
+    [searchParam]
+  );
   const location = useLocation();
+
+  // console.log(param);
 
   ////for Search
   const [logId, setLogId] = useState("");
@@ -68,26 +71,15 @@ export default function TableData() {
     setPage(newPage);
   };
 
-  useEffect(() => {
-    const callAPI = async () => {
-      setLoading(true);
-      let resp = await getTableData();
-      setResp(resp?.data?.result?.auditLog);
-      setFilteredData(resp?.data?.result?.auditLog);
-      setLoading(false);
-    };
-    callAPI();
-  }, []);
-
-  const setupParams = () => {
-    logId.length && searchParam.set("logId", logId);
+  const setupParams = useCallback(() => {
+    logId && searchParam.set("logId", logId);
     appId && searchParam.set("appId", appId);
     appType && searchParam.set("appType", appType);
     actionType && searchParam.set("actionType", actionType);
     from && searchParam.set("from", from);
     to && searchParam.set("to", to);
     setsearchParam(searchParam);
-  };
+  }, [logId, appId, appType, actionType, from, to]);
 
   const applyFilter = () => {
     setupParams();
@@ -96,54 +88,51 @@ export default function TableData() {
       setFilteredData(resp);
     } else {
       console.log("inside else");
-      let filteredData = resp.filter((el) => {
-        return (
-          (logId &&
-            el?.logId?.toString().trim()?.includes(logId?.toString())) ||
-          (appId &&
-            el?.applicationId?.toString()?.includes(appId.toString())) ||
-          el?.applicationType?.toString() === appType?.toString() ||
-          (el?.actionType != null &&
-            el?.actionType?.toString() === actionType?.toString()) ||
-          (from &&
-            dayjs(el.creationTimestamp).format("YYYY-MM-DD") ===
-              dayjs(from).format("YYYY-MM-DD")) ||
-          (to &&
-            dayjs(el.creationTimestamp).format("YYYY-MM-DD") ===
-              dayjs(to).format("YYYY-MM-DD")) ||
-          (from &&
-            to &&
-            dayjs(el.creationTimestamp).format("YYYY-MM-DD") <=
-              dayjs(el.to).format("YYYY-MM-DD") &&
-            dayjs(el.creationTimestamp).format("YYYY-MM-DD") >=
-              dayjs(from).format("YYYY-MM-DD"))
-        );
-      });
+
+      const filteredData = () => {
+        return resp
+          .filter((ele) => (logId ? ele.logId.toString().includes(logId) : ele))
+          .filter((ele) => (appId ? ele.appId.toString().includes(appId) : ele))
+          .filter((ele) =>
+            appType.length > 0 ? ele?.applicationType?.includes(appType) : ele
+          )
+          .filter((ele) =>
+            actionType.length > 0 ? ele?.actionType?.includes(actionType) : ele
+          )
+          .filter(
+            (ele) =>
+              (from &&
+                dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
+                  dayjs(from).format("YYYY-MM-DD")) ||
+              (to &&
+                dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
+                  dayjs(to).format("YYYY-MM-DD")) ||
+              (from &&
+                to &&
+                dayjs(from).format("YYYY-MM-DD") <=
+                  dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") &&
+                dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") <=
+                  dayjs(to).format("YYYY-MM-DD")) ||
+              (!from && !to && ele)
+          );
+      };
       setFilteredData(filteredData);
       setPage(0);
-      const dataAfterFilter = resp.filter((item) => {
-        // dataToFilter.forEach((empData) => {
-        if (actionType === item.actionType) {
-        } else if (appType === item.applicationType) {
-        } else if (String(item.applicationId).includes(appId)) {
-        }
-        //  else if (
-
-        //   new Date(empData[1]).setHours(0, 0, 0, 0) <=
-        //     new Date(item.creationTimestamp).setHours(0, 0, 0, 0)
-        // ) {
-        // } else if (
-
-        //   new Date(empData[1]).setHours(0, 0, 0, 0) >=
-        //     new Date(item.creationTimestamp).setHours(0, 0, 0, 0)
-        // )
-      });
-      console.log(dataAfterFilter);
+      console.log(filteredData);
     }
   };
 
-  // return dataToFilter
-  // });
+  const callAPI = useCallback(async () => {
+    setLoading(true);
+    let resp = await getTableData();
+    setResp(resp?.data?.result?.auditLog);
+    setFilteredData(resp?.data?.result?.auditLog);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    callAPI();
+  }, []);
 
   useEffect(() => {
     Object.keys(param).includes("logId")
@@ -320,7 +309,7 @@ export default function TableData() {
             </Table>
           </TableContainer>
 
-          {filteredArray.length != 0 && (
+          {filteredArray.length !== 0 && (
             <TablePagination
               component="div"
               count={filteredArray.length}
