@@ -25,21 +25,6 @@ export default function DatePickup({ lable, val, setVal, from, to }) {
         renderInput={(params) => (
           <>
             <TextField {...params} />
-            {val && (
-              <IconButton
-                style={{
-                  position: "absolute",
-                  top: ".5rem",
-                  margin: "auto",
-                  right: "2rem",
-                }}
-                onClick={() => {
-                  setVal("");
-                }}
-              >
-                <ClearIcon />
-              </IconButton>
-            )}
           </>
         )}
       />

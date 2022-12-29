@@ -9,7 +9,11 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import dayjs from "dayjs";
-import { useLocation, useSearchParams } from "react-router-dom";
+import {
+  createSearchParams,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import InputAdornment from "@mui/material/InputAdornment";
 import ClearIcon from "@mui/icons-material/Clear";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -39,21 +43,25 @@ export default function TableData() {
   const [filteredArray, setFilteredData] = useState([]);
 
   const [searchParam, setsearchParam] = useSearchParams();
-  const param = useMemo(
-    () => Object.fromEntries([...searchParam]),
-    [searchParam]
-  );
-  const location = useLocation();
 
-  // console.log(param);
+  const [val, setVal] = useState({
+    logId: "",
+    appId: "",
+    appType: "",
+    actionType: "",
+    from: "",
+    to: "",
+  });
+
+  const { logId, appId, appType, actionType, from, to } = val;
 
   ////for Search
-  const [logId, setLogId] = useState("");
-  const [appType, setAppType] = useState("");
-  const [appId, setAppId] = useState("");
-  const [actionType, setActionType] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // const [logId, setLogId] = useState("");
+  // const [appType, setAppType] = useState("");
+  // const [appId, setAppId] = useState("");
+  // const [actionType, setActionType] = useState("");
+  // const [from, setFrom] = useState("");
+  // const [to, setTo] = useState("");
 
   const applicationTypeList = [
     ...new Set(resp?.map((item) => item.applicationType)),
@@ -72,14 +80,47 @@ export default function TableData() {
   };
 
   const setupParams = useCallback(() => {
-    logId && searchParam.set("logId", logId);
-    appId && searchParam.set("appId", appId);
-    appType && searchParam.set("appType", appType);
-    actionType && searchParam.set("actionType", actionType);
-    from && searchParam.set("from", from);
-    to && searchParam.set("to", to);
-    setsearchParam(searchParam);
+    let params = {};
+    Object.assign(params, logId && { logId: logId });
+    Object.assign(params, appId && { appId: appId });
+    Object.assign(params, appType && { appType: appType });
+    Object.assign(params, actionType && { actionType: actionType });
+    Object.assign(params, from && { from: from });
+    Object.assign(params, to && { to: to });
+    setsearchParam(createSearchParams(params));
   }, [logId, appId, appType, actionType, from, to]);
+
+  const filteredData = () => {
+    const filterdata = resp
+      .filter((ele) => (logId ? ele.logId?.toString().includes(logId) : ele))
+      .filter((ele) =>
+        appId ? ele.applicationId?.toString().includes(appId) : ele
+      )
+      .filter((ele) =>
+        appType.length > 0 ? ele?.applicationType?.includes(appType) : ele
+      )
+      .filter((ele) =>
+        actionType.length > 0 ? ele?.actionType?.includes(actionType) : ele
+      )
+      .filter(
+        (ele) =>
+          (from &&
+            dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
+              dayjs(from).format("YYYY-MM-DD")) ||
+          (to &&
+            dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
+              dayjs(to).format("YYYY-MM-DD")) ||
+          (from &&
+            to &&
+            dayjs(from).format("YYYY-MM-DD") <=
+              dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") &&
+            dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") <=
+              dayjs(to).format("YYYY-MM-DD")) ||
+          (!from && !to && ele)
+      );
+    console.log(filterdata);
+    setFilteredData(filterdata);
+  };
 
   const applyFilter = () => {
     setupParams();
@@ -88,41 +129,8 @@ export default function TableData() {
       setFilteredData(resp);
     } else {
       console.log("inside else");
-
-      const filteredData = () => {
-        return resp
-          .filter((ele) =>
-            logId ? ele.logId?.toString().includes(logId) : ele
-          )
-          .filter((ele) =>
-            appId ? ele.applicationId?.toString().includes(appId) : ele
-          )
-          .filter((ele) =>
-            appType.length > 0 ? ele?.applicationType?.includes(appType) : ele
-          )
-          .filter((ele) =>
-            actionType.length > 0 ? ele?.actionType?.includes(actionType) : ele
-          )
-          .filter(
-            (ele) =>
-              (from &&
-                dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
-                  dayjs(from).format("YYYY-MM-DD")) ||
-              (to &&
-                dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
-                  dayjs(to).format("YYYY-MM-DD")) ||
-              (from &&
-                to &&
-                dayjs(from).format("YYYY-MM-DD") <=
-                  dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") &&
-                dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") <=
-                  dayjs(to).format("YYYY-MM-DD")) ||
-              (!from && !to && ele)
-          );
-      };
-      setFilteredData(filteredData);
+      filteredData();
       setPage(0);
-      // console.log(filteredData);
     }
   };
 
@@ -139,21 +147,17 @@ export default function TableData() {
   }, []);
 
   useEffect(() => {
-    Object.keys(param).includes("logId")
-      ? setLogId(param?.logId)
-      : setLogId("");
-    Object.keys(param).includes("appId")
-      ? setAppId(param?.appId)
-      : setAppId("");
-    Object.keys(param).includes("appType")
-      ? setAppType(param?.appType)
-      : setAppType("");
-    Object.keys(param).includes("actionType")
-      ? setActionType(param?.actionType)
-      : setActionType("");
-    Object.keys(param).includes("from") ? setFrom(param?.from) : setFrom("");
-    Object.keys(param).includes("to") ? setTo(param?.to) : setTo("");
-  }, [location]);
+    setVal({
+      ...val,
+      logId: searchParam.get("logId") || "",
+      appId: searchParam.get("appId") || "",
+      appType: searchParam.get("appType") || "",
+      actionType: searchParam.get("actionType") || "",
+      from: searchParam.get("from") || "",
+      to: searchParam.get("tto") || "",
+    });
+    filteredData();
+  }, [searchParam]);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -180,7 +184,8 @@ export default function TableData() {
               value={logId}
               variant="outlined"
               onChange={(e) => {
-                setLogId(e.target.value);
+                // setLogId(e.target.value);
+                setVal({ ...val, logId: e.target.value });
               }}
             />
 
@@ -190,7 +195,8 @@ export default function TableData() {
               label="Application Id"
               variant="outlined"
               onChange={(e) => {
-                setAppId(e.target.value);
+                // setAppId(e.target.value);
+                setVal({ ...val, appId: e.target.value });
               }}
             />
 
@@ -200,7 +206,8 @@ export default function TableData() {
                 value={appType}
                 label="Application Type"
                 onChange={(e) => {
-                  setAppType(e.target.value);
+                  // setAppType(e.target.value);
+                  setVal({ ...val, appType: e.target.value });
                 }}
               >
                 <MenuItem value="" disabled>
@@ -222,7 +229,8 @@ export default function TableData() {
                 value={actionType}
                 label="Action Type"
                 onChange={(e) => {
-                  setActionType(e.target.value);
+                  // setActionType(e.target.value);
+                  setVal({ ...val, actionType: e.target.value });
                 }}
               >
                 <MenuItem value="" disabled>
@@ -242,7 +250,10 @@ export default function TableData() {
               <DatePickup
                 lable={"From Date"}
                 val={from}
-                setVal={setFrom}
+                setVal={(e) => {
+                  console.log(e);
+                  setVal({ ...val, from: e });
+                }}
                 searchParam={searchParam}
                 setsearchParam={setsearchParam}
                 to={to}
@@ -255,7 +266,10 @@ export default function TableData() {
                 searchParam={searchParam}
                 setsearchParam={setsearchParam}
                 val={to}
-                setVal={setTo}
+                setVal={(e) => {
+                  console.log(e);
+                  setVal({ ...val, from: e });
+                }}
                 from={from}
               />
             </FormControl>
