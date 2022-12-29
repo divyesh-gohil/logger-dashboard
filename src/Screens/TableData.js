@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,7 +8,7 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import dayjs from "dayjs";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import InputAdornment from "@mui/material/InputAdornment";
 import ClearIcon from "@mui/icons-material/Clear";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -26,6 +26,9 @@ import {
 import { getTableData } from "../CallApi/GetTableData";
 import { getComparator, TableHeader } from "../Component/TableHeader";
 import DatePickup from "../Component/DatePickup";
+import { type } from "@testing-library/user-event/dist/type";
+import { Login } from "@mui/icons-material";
+import { set } from "date-fns";
 
 export default function TableData() {
   const [order, setOrder] = useState("");
@@ -38,6 +41,8 @@ export default function TableData() {
   const [filteredArray, setFilteredData] = useState([]);
 
   const [searchParam, setsearchParam] = useSearchParams();
+  const param = Object.fromEntries([...searchParam]);
+  const location = useLocation();
 
   ////for Search
   const [logId, setLogId] = useState("");
@@ -63,23 +68,34 @@ export default function TableData() {
     setPage(newPage);
   };
 
-  const applyFilter = () => {
-    logId ? searchParam.set("logId", logId) : searchParam.delete("logId");
-    appId ? searchParam.set("appId", appId) : searchParam.delete("appId");
-    appType
-      ? searchParam.set("appType", appType)
-      : searchParam.delete("appType");
-    actionType
-      ? searchParam.set("actionType", actionType)
-      : searchParam.delete("actionType");
-    from ? searchParam.set("from", from) : searchParam.delete("from");
-    to ? searchParam.set("to", to) : searchParam.delete("to");
-    setsearchParam(searchParam);
-    setPage(0);
+  useEffect(() => {
+    const callAPI = async () => {
+      setLoading(true);
+      let resp = await getTableData();
+      setResp(resp?.data?.result?.auditLog);
+      setFilteredData(resp?.data?.result?.auditLog);
+      setLoading(false);
+    };
+    callAPI();
+  }, []);
 
+  const setupParams = () => {
+    logId.length && searchParam.set("logId", logId);
+    appId && searchParam.set("appId", appId);
+    appType && searchParam.set("appType", appType);
+    actionType && searchParam.set("actionType", actionType);
+    from && searchParam.set("from", from);
+    to && searchParam.set("to", to);
+    setsearchParam(searchParam);
+  };
+
+  const applyFilter = () => {
+    setupParams();
     if (!logId && !appId && !appType & !actionType && !from && !to) {
+      console.log("inside if");
       setFilteredData(resp);
     } else {
+      console.log("inside else");
       let filteredData = resp.filter((el) => {
         return (
           (logId &&
@@ -104,39 +120,47 @@ export default function TableData() {
         );
       });
       setFilteredData(filteredData);
+      setPage(0);
+      const dataAfterFilter = resp.filter((item) => {
+        // dataToFilter.forEach((empData) => {
+        if (actionType === item.actionType) {
+        } else if (appType === item.applicationType) {
+        } else if (String(item.applicationId).includes(appId)) {
+        }
+        //  else if (
+
+        //   new Date(empData[1]).setHours(0, 0, 0, 0) <=
+        //     new Date(item.creationTimestamp).setHours(0, 0, 0, 0)
+        // ) {
+        // } else if (
+
+        //   new Date(empData[1]).setHours(0, 0, 0, 0) >=
+        //     new Date(item.creationTimestamp).setHours(0, 0, 0, 0)
+        // )
+      });
+      console.log(dataAfterFilter);
     }
   };
 
-  useEffect(() => {
-    const callAPI = async () => {
-      await setLoading(true);
-      let resp = await getTableData();
-      await setResp(resp?.data?.result?.auditLog);
-      await setFilteredData(resp?.data?.result?.auditLog);
-      await setLoading(false);
-      console.log("  ");
-    };
-    callAPI();
-  }, []);
+  // return dataToFilter
+  // });
 
   useEffect(() => {
-    window.onpopstate = (e) => {
-      console.log("run");
-      const logIdParam = searchParam.get("logId");
-      const appIdParam = searchParam.get("appId");
-      const appTypeParam = searchParam.get("appType");
-      const actionTypeParam = searchParam.get("actionType");
-      const fromParam = searchParam.get("from");
-      const toParam = searchParam.get("to");
-
-      logIdParam === null && setLogId("");
-      appIdParam === null && setAppId("");
-      appTypeParam == null && setAppType("");
-      actionTypeParam === null && setActionType("");
-      fromParam === null && setFrom("");
-      toParam === null && setTo("");
-    };
-  }, []);
+    Object.keys(param).includes("logId")
+      ? setLogId(param?.logId)
+      : setLogId("");
+    Object.keys(param).includes("appId")
+      ? setAppId(param?.appId)
+      : setAppId("");
+    Object.keys(param).includes("appType")
+      ? setAppType(param?.appType)
+      : setAppType("");
+    Object.keys(param).includes("actionType")
+      ? setActionType(param?.actionType)
+      : setActionType("");
+    Object.keys(param).includes("from") ? setFrom(param?.from) : setFrom("");
+    Object.keys(param).includes("to") ? setTo(param?.to) : setTo("");
+  }, [location]);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -165,22 +189,6 @@ export default function TableData() {
               onChange={(e) => {
                 setLogId(e.target.value);
               }}
-              InputProps={
-                logId && {
-                  endAdornment: (
-                    <InputAdornment
-                      position="end"
-                      onClick={() => {
-                        setLogId("");
-                        searchParam.delete("logId");
-                        setsearchParam(searchParam);
-                      }}
-                    >
-                      X
-                    </InputAdornment>
-                  ),
-                }
-              }
             />
 
             <TextField
@@ -191,22 +199,6 @@ export default function TableData() {
               onChange={(e) => {
                 setAppId(e.target.value);
               }}
-              InputProps={
-                appId && {
-                  endAdornment: (
-                    <InputAdornment
-                      position="end"
-                      onClick={() => {
-                        setAppId("");
-                        searchParam.delete("appId");
-                        setsearchParam(searchParam);
-                      }}
-                    >
-                      X
-                    </InputAdornment>
-                  ),
-                }
-              }
             />
 
             <FormControl sx={{ m: 1, minWidth: 200 }}>
@@ -217,19 +209,6 @@ export default function TableData() {
                 onChange={(e) => {
                   setAppType(e.target.value);
                 }}
-                endAdornment={
-                  appType && (
-                    <IconButton
-                      onClick={() => {
-                        setAppType("");
-                        searchParam.delete("appType");
-                        setsearchParam(searchParam);
-                      }}
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  )
-                }
               >
                 <MenuItem value="" disabled>
                   Please select
@@ -252,19 +231,6 @@ export default function TableData() {
                 onChange={(e) => {
                   setActionType(e.target.value);
                 }}
-                endAdornment={
-                  actionType && (
-                    <IconButton
-                      onClick={() => {
-                        setActionType("");
-                        searchParam.delete("actionType");
-                        setsearchParam(searchParam);
-                      }}
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  )
-                }
               >
                 <MenuItem value="" disabled>
                   Please select
@@ -327,7 +293,7 @@ export default function TableData() {
                             {ele.logId ? ele.logId : `--`}
                           </TableCell>
                           <TableCell align="center">
-                            {ele.applicationId ? ele.applicationId : ``}
+                            {ele.applicationId ? ele.applicationId : `--`}
                           </TableCell>
                           <TableCell align="center">
                             {ele.applicationType ? ele.applicationType : `--`}
@@ -362,7 +328,6 @@ export default function TableData() {
               rowsPerPage={rowsPerPage}
               rowsPerPageOptions={[10]}
               onPageChange={handleChangePage}
-              // onRowsPerPageChange={handleChangeRowsPerPage}
             />
           )}
         </Box>
