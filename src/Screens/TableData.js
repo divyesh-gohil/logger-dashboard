@@ -100,7 +100,7 @@ export default function TableData() {
     setPage(newPage);
   };
 
-  const setupParams = useCallback(() => {
+  const setupParams = () => {
     const params = {};
     logId && Object.assign(params, { logId });
     appId && Object.assign(params, { appId });
@@ -109,7 +109,7 @@ export default function TableData() {
     from && Object.assign(params, { from });
     to && Object.assign(params, { to });
     setsearchParam(createSearchParams(params));
-  }, [logId, appId, appType, actionType, from, to]);
+  };
 
   const applyFilter = () => {
     setupParams();
@@ -154,8 +154,12 @@ export default function TableData() {
 
   const handleFilterData = () => {
     const filteredData = () => {
+      let logId = searchParam.get("logId") || "";
+      let appId = searchParam.get("appId") || "";
+      let appType = searchParam.get("appType") || "";
+      let actionType = searchParam.get("actionType") || "";
       // console.log("inside filter method", {
-      //   myState,
+      //   logId,
       //   appId,
       //   actionType,
       //   appType,
