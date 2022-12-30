@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -9,51 +9,80 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import dayjs from "dayjs";
-import { useLocation, useSearchParams } from "react-router-dom";
-import InputAdornment from "@mui/material/InputAdornment";
-import ClearIcon from "@mui/icons-material/Clear";
+import { useSearchParams, createSearchParams } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
+
 import {
   Button,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
   TextField,
   Typography,
 } from "@mui/material";
-
 import { getTableData } from "../CallApi/GetTableData";
 import { getComparator, TableHeader } from "../Component/TableHeader";
 import DatePickup from "../Component/DatePickup";
+
+const initialState = {
+  logId: "",
+  appId: "",
+  actionType: "",
+  appType: "",
+  from: "",
+  to: "",
+};
+
+const handleReducer = (state, action) => {
+  switch (action.type) {
+    case "setData":
+      // console.log("setData case  ", action.payload);
+      return action.payload;
+    case "filteredData":
+      // console.log("filterData in reducer", action.payload);
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+const handleStateReducer = (state, action) => {
+  // console.log("val in dispatch ", { state, action });
+  switch (action.type) {
+    case "logId":
+      return { ...state, logId: action.payload };
+    case "appId":
+      return { ...state, appId: action.payload };
+    case "actionType":
+      return { ...state, actionType: action.payload };
+    case "appType":
+      return { ...state, appType: action.payload };
+    case "from":
+      return { ...state, from: action.payload };
+    case "to":
+      return { ...state, to: action.payload };
+    default:
+      console.log("called ", action.type, state);
+      return state;
+  }
+};
 
 export default function TableData() {
   const [order, setOrder] = useState("");
   const [orderBy, setOrderBy] = useState("asc");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
 
   const [resp, setResp] = useState([]);
-  const [filteredArray, setFilteredData] = useState([]);
-
+  const [dataFilter, filterDispatch] = useReducer(handleReducer, []);
+  const [myState, stateDispatch] = useReducer(handleStateReducer, initialState);
   const [searchParam, setsearchParam] = useSearchParams();
-  const param = useMemo(
-    () => Object.fromEntries([...searchParam]),
-    [searchParam]
-  );
-  const location = useLocation();
+  // handleStateReducer,
+  // initialState
 
-  // console.log(param);
-
-  ////for Search
-  const [logId, setLogId] = useState("");
-  const [appType, setAppType] = useState("");
-  const [appId, setAppId] = useState("");
-  const [actionType, setActionType] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const { logId, appId, appType, actionType, from, to } = myState;
 
   const applicationTypeList = [
     ...new Set(resp?.map((item) => item.applicationType)),
@@ -72,57 +101,25 @@ export default function TableData() {
   };
 
   const setupParams = useCallback(() => {
-    logId && searchParam.set("logId", logId);
-    appId && searchParam.set("appId", appId);
-    appType && searchParam.set("appType", appType);
-    actionType && searchParam.set("actionType", actionType);
-    from && searchParam.set("from", from);
-    to && searchParam.set("to", to);
-    setsearchParam(searchParam);
+    const params = {};
+    logId && Object.assign(params, { logId });
+    appId && Object.assign(params, { appId });
+    appType && Object.assign(params, { appType });
+    actionType && Object.assign(params, { actionType });
+    from && Object.assign(params, { from });
+    to && Object.assign(params, { to });
+    setsearchParam(createSearchParams(params));
   }, [logId, appId, appType, actionType, from, to]);
 
   const applyFilter = () => {
     setupParams();
     if (!logId && !appId && !appType & !actionType && !from && !to) {
-      console.log("inside if");
-      setFilteredData(resp);
+      // console.log("inside if");
+      filterDispatch({ type: "setData", payload: resp });
     } else {
-      console.log("inside else");
-
-      const filteredData = () => {
-        return resp
-          .filter((ele) =>
-            logId ? ele.logId?.toString().includes(logId) : ele
-          )
-          .filter((ele) =>
-            appId ? ele.applicationId?.toString().includes(appId) : ele
-          )
-          .filter((ele) =>
-            appType.length > 0 ? ele?.applicationType?.includes(appType) : ele
-          )
-          .filter((ele) =>
-            actionType.length > 0 ? ele?.actionType?.includes(actionType) : ele
-          )
-          .filter(
-            (ele) =>
-              (from &&
-                dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
-                  dayjs(from).format("YYYY-MM-DD")) ||
-              (to &&
-                dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
-                  dayjs(to).format("YYYY-MM-DD")) ||
-              (from &&
-                to &&
-                dayjs(from).format("YYYY-MM-DD") <=
-                  dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") &&
-                dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") <=
-                  dayjs(to).format("YYYY-MM-DD")) ||
-              (!from && !to && ele)
-          );
-      };
-      setFilteredData(filteredData);
+      // console.log("inside else");
+      handleFilterData();
       setPage(0);
-      // console.log(filteredData);
     }
   };
 
@@ -130,7 +127,7 @@ export default function TableData() {
     setLoading(true);
     let resp = await getTableData();
     setResp(resp?.data?.result?.auditLog);
-    setFilteredData(resp?.data?.result?.auditLog);
+    filterDispatch({ type: "setData", payload: resp?.data?.result?.auditLog });
     setLoading(false);
   }, []);
 
@@ -139,21 +136,61 @@ export default function TableData() {
   }, []);
 
   useEffect(() => {
-    Object.keys(param).includes("logId")
-      ? setLogId(param?.logId)
-      : setLogId("");
-    Object.keys(param).includes("appId")
-      ? setAppId(param?.appId)
-      : setAppId("");
-    Object.keys(param).includes("appType")
-      ? setAppType(param?.appType)
-      : setAppType("");
-    Object.keys(param).includes("actionType")
-      ? setActionType(param?.actionType)
-      : setActionType("");
-    Object.keys(param).includes("from") ? setFrom(param?.from) : setFrom("");
-    Object.keys(param).includes("to") ? setTo(param?.to) : setTo("");
-  }, [location]);
+    stateDispatch({ type: "logId", payload: searchParam.get("logId") || "" });
+    stateDispatch({ type: "appId", payload: searchParam.get("appId") || "" });
+    stateDispatch({
+      type: "appType",
+      payload: searchParam.get("appType") || "",
+    });
+    stateDispatch({
+      type: "actionType",
+      payload: searchParam.get("actionType") || "",
+    });
+    stateDispatch({ type: "from", payload: searchParam.get("from") || "" });
+    stateDispatch({ type: "to", payload: searchParam.get("to") || "" });
+
+    handleFilterData();
+  }, [searchParam]);
+
+  const handleFilterData = () => {
+    const filteredData = () => {
+      // console.log("inside filter method", {
+      //   myState,
+      //   appId,
+      //   actionType,
+      //   appType,
+      // });
+      return resp
+        .filter((ele) => (logId ? ele.logId?.toString().includes(logId) : ele))
+        .filter((ele) =>
+          appId ? ele.applicationId?.toString().includes(appId) : ele
+        )
+        .filter((ele) =>
+          appType.length > 0 ? ele?.applicationType?.includes(appType) : ele
+        )
+        .filter((ele) =>
+          actionType.length > 0 ? ele?.actionType?.includes(actionType) : ele
+        )
+        .filter(
+          (ele) =>
+            (from &&
+              dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
+                dayjs(from).format("YYYY-MM-DD")) ||
+            (to &&
+              dayjs(ele.creationTimestamp).format("YYYY-MM-DD") ===
+                dayjs(to).format("YYYY-MM-DD")) ||
+            (from &&
+              to &&
+              dayjs(from).format("YYYY-MM-DD") <=
+                dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") &&
+              dayjs(ele?.creationTimestamp).format("YYYY-MM-DD") <=
+                dayjs(to).format("YYYY-MM-DD")) ||
+            (!from && !to && ele)
+        );
+    };
+    // console.log(filteredData()?.length);
+    filterDispatch({ type: "filteredData", payload: filteredData() });
+  };
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -180,7 +217,8 @@ export default function TableData() {
               value={logId}
               variant="outlined"
               onChange={(e) => {
-                setLogId(e.target.value);
+                // setLogId(e.target.value);
+                stateDispatch({ type: "logId", payload: e.target.value });
               }}
             />
 
@@ -190,7 +228,8 @@ export default function TableData() {
               label="Application Id"
               variant="outlined"
               onChange={(e) => {
-                setAppId(e.target.value);
+                // setAppId(e.target.value);
+                stateDispatch({ type: "appId", payload: e.target.value });
               }}
             />
 
@@ -200,7 +239,8 @@ export default function TableData() {
                 value={appType}
                 label="Application Type"
                 onChange={(e) => {
-                  setAppType(e.target.value);
+                  // setAppType(e.target.value);
+                  stateDispatch({ type: "appType", payload: e.target.value });
                 }}
               >
                 <MenuItem value="" disabled>
@@ -222,7 +262,11 @@ export default function TableData() {
                 value={actionType}
                 label="Action Type"
                 onChange={(e) => {
-                  setActionType(e.target.value);
+                  // setActionType(e.target.value);
+                  stateDispatch({
+                    type: "actionType",
+                    payload: e.target.value,
+                  });
                 }}
               >
                 <MenuItem value="" disabled>
@@ -242,9 +286,10 @@ export default function TableData() {
               <DatePickup
                 lable={"From Date"}
                 val={from}
-                setVal={setFrom}
-                searchParam={searchParam}
-                setsearchParam={setsearchParam}
+                // setVal={setFrom}
+                setVal={(val) => stateDispatch({ type: "from", payload: val })}
+                // searchParam={searchParam}
+                // setsearchParam={setsearchParam}
                 to={to}
               />
             </FormControl>
@@ -252,10 +297,11 @@ export default function TableData() {
             <FormControl sx={{ m: 1, minWidth: 200 }}>
               <DatePickup
                 lable={"To Date"}
-                searchParam={searchParam}
-                setsearchParam={setsearchParam}
+                // searchParam={searchParam}
+                // setsearchParam={setsearchParam}
                 val={to}
-                setVal={setTo}
+                // setVal={setTo}
+                setVal={(val) => stateDispatch({ type: "to", payload: val })}
                 from={from}
               />
             </FormControl>
@@ -274,9 +320,10 @@ export default function TableData() {
                 orderBy={orderBy}
                 onRequestSort={handleSort}
               />
+
               <TableBody>
-                {filteredArray.length > 0 ? (
-                  filteredArray
+                {dataFilter.length > 0 ? (
+                  dataFilter
                     .sort(getComparator(order, orderBy))
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((ele, index) => {
@@ -313,10 +360,10 @@ export default function TableData() {
             </Table>
           </TableContainer>
 
-          {filteredArray.length !== 0 && (
+          {dataFilter.length !== 0 && (
             <TablePagination
               component="div"
-              count={filteredArray.length}
+              count={dataFilter.length}
               page={page}
               rowsPerPage={rowsPerPage}
               rowsPerPageOptions={[10]}
