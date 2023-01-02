@@ -37,7 +37,7 @@ const initialState = {
   to: "",
 };
 
-export default function TableData() {
+export default function TableData(props) {
   const [order, setOrder] = useState("");
   const [orderBy, setOrderBy] = useState("asc");
   const [page, setPage] = useState(0);
@@ -89,11 +89,11 @@ export default function TableData() {
   };
 
   const callAPI = useCallback(async () => {
-    setLoading(true);
+    // setLoading(true);
     let resp = await getTableData();
     setResp(resp?.data?.result?.auditLog);
     filterDispatch({ type: "setData", payload: resp?.data?.result?.auditLog });
-    setLoading(false);
+    // setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -160,6 +160,7 @@ export default function TableData() {
     <Box sx={{ width: "100%" }}>
       {loading ? (
         <Box
+          data-testid="loading"
           sx={{ width: "100%", m: 2 }}
           display="flex"
           flexDirection={"column"}
@@ -173,32 +174,33 @@ export default function TableData() {
           </div>
         </Box>
       ) : (
-        <Box sx={{ m: 2 }}>
+        <Box sx={{ m: 2 }} data-testid="notloading">
           <Paper sx={{ p: 2 }}>
             <TextField
               style={{ margin: 10, minWidth: 150 }}
               label="Log Id"
+              data-testid="logId"
               value={logId}
               variant="outlined"
               onChange={(e) => {
                 stateDispatch({ type: "logId", payload: e.target.value });
               }}
             />
-
             <TextField
               value={appId}
               style={{ margin: 10, minWidth: 150 }}
               label="Application Id"
+              data-testid="appId"
               variant="outlined"
               onChange={(e) => {
                 stateDispatch({ type: "appId", payload: e.target.value });
               }}
             />
-
             <FormControl sx={{ m: 1, minWidth: 200 }}>
               <InputLabel>Application Type</InputLabel>
               <Select
                 value={appType}
+                data-testid="appType"
                 label="Application Type"
                 onChange={(e) => {
                   stateDispatch({ type: "appType", payload: e.target.value });
@@ -220,6 +222,7 @@ export default function TableData() {
             <FormControl sx={{ m: 1, minWidth: 200 }}>
               <InputLabel>Action Type</InputLabel>
               <Select
+                data-testid="actionType"
                 value={actionType}
                 label="Action Type"
                 onChange={(e) => {
@@ -245,6 +248,7 @@ export default function TableData() {
             <FormControl sx={{ m: 1, minWidth: 150 }}>
               <DatePickup
                 lable={"From Date"}
+                data-testid="from"
                 val={from}
                 setVal={(val) => stateDispatch({ type: "from", payload: val })}
                 to={to}
@@ -254,6 +258,7 @@ export default function TableData() {
             <FormControl sx={{ m: 1, minWidth: 200 }}>
               <DatePickup
                 lable={"To Date"}
+                data-testid="to"
                 val={to}
                 setVal={(val) => stateDispatch({ type: "to", payload: val })}
                 from={from}
@@ -305,7 +310,7 @@ export default function TableData() {
                     })
                 ) : (
                   <TableRow>
-                    <TableCell align="center" colSpan={5}>
+                    <TableCell align="center" colSpan={5} data-testid="nodata">
                       No data found.
                     </TableCell>
                   </TableRow>

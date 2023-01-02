@@ -13,7 +13,6 @@
     "@mui/x-data-grid": "^5.17.16",
     "@mui/x-date-pickers": "^5.0.11",
     "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.2.1",
     "date-fns": "^2.29.3",
@@ -50,5 +49,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "axios": "axios/dist/node/axios.cjs"
+    }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^13.4.0",
+    "react-test-renderer": "^18.2.0"
   }
 }
