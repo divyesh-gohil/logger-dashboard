@@ -11,7 +11,6 @@ import Paper from "@mui/material/Paper";
 import dayjs from "dayjs";
 import { useSearchParams, createSearchParams } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
-
 import {
   Button,
   FormControl,
@@ -24,6 +23,10 @@ import {
 import { getTableData } from "../CallApi/GetTableData";
 import { getComparator, TableHeader } from "../Component/TableHeader";
 import DatePickup from "../Component/DatePickup";
+import {
+  handleReducer,
+  handleStateReducer,
+} from "../Component/ReducerFunctions";
 
 const initialState = {
   logId: "",
@@ -32,40 +35,6 @@ const initialState = {
   appType: "",
   from: "",
   to: "",
-};
-
-const handleReducer = (state, action) => {
-  switch (action.type) {
-    case "setData":
-      // console.log("setData case  ", action.payload);
-      return action.payload;
-    case "filteredData":
-      // console.log("filterData in reducer", action.payload);
-      return action.payload;
-    default:
-      return state;
-  }
-};
-
-const handleStateReducer = (state, action) => {
-  // console.log("val in dispatch ", { state, action });
-  switch (action.type) {
-    case "logId":
-      return { ...state, logId: action.payload };
-    case "appId":
-      return { ...state, appId: action.payload };
-    case "actionType":
-      return { ...state, actionType: action.payload };
-    case "appType":
-      return { ...state, appType: action.payload };
-    case "from":
-      return { ...state, from: action.payload };
-    case "to":
-      return { ...state, to: action.payload };
-    default:
-      console.log("called ", action.type, state);
-      return state;
-  }
 };
 
 export default function TableData() {
@@ -79,8 +48,6 @@ export default function TableData() {
   const [dataFilter, filterDispatch] = useReducer(handleReducer, []);
   const [myState, stateDispatch] = useReducer(handleStateReducer, initialState);
   const [searchParam, setsearchParam] = useSearchParams();
-  // handleStateReducer,
-  // initialState
 
   const { logId, appId, appType, actionType, from, to } = myState;
 
@@ -114,10 +81,8 @@ export default function TableData() {
   const applyFilter = () => {
     setupParams();
     if (!logId && !appId && !appType & !actionType && !from && !to) {
-      // console.log("inside if");
       filterDispatch({ type: "setData", payload: resp });
     } else {
-      // console.log("inside else");
       handleFilterData();
       setPage(0);
     }
@@ -158,12 +123,8 @@ export default function TableData() {
       let appId = searchParam.get("appId") || "";
       let appType = searchParam.get("appType") || "";
       let actionType = searchParam.get("actionType") || "";
-      // console.log("inside filter method", {
-      //   logId,
-      //   appId,
-      //   actionType,
-      //   appType,
-      // });
+      let from = searchParam.get("from") || "";
+      let to = searchParam.get("to") || "";
       return resp
         .filter((ele) => (logId ? ele.logId?.toString().includes(logId) : ele))
         .filter((ele) =>
@@ -192,7 +153,6 @@ export default function TableData() {
             (!from && !to && ele)
         );
     };
-    // console.log(filteredData()?.length);
     filterDispatch({ type: "filteredData", payload: filteredData() });
   };
 
@@ -221,7 +181,6 @@ export default function TableData() {
               value={logId}
               variant="outlined"
               onChange={(e) => {
-                // setLogId(e.target.value);
                 stateDispatch({ type: "logId", payload: e.target.value });
               }}
             />
@@ -232,7 +191,6 @@ export default function TableData() {
               label="Application Id"
               variant="outlined"
               onChange={(e) => {
-                // setAppId(e.target.value);
                 stateDispatch({ type: "appId", payload: e.target.value });
               }}
             />
@@ -243,7 +201,6 @@ export default function TableData() {
                 value={appType}
                 label="Application Type"
                 onChange={(e) => {
-                  // setAppType(e.target.value);
                   stateDispatch({ type: "appType", payload: e.target.value });
                 }}
               >
@@ -266,7 +223,6 @@ export default function TableData() {
                 value={actionType}
                 label="Action Type"
                 onChange={(e) => {
-                  // setActionType(e.target.value);
                   stateDispatch({
                     type: "actionType",
                     payload: e.target.value,
@@ -290,10 +246,7 @@ export default function TableData() {
               <DatePickup
                 lable={"From Date"}
                 val={from}
-                // setVal={setFrom}
                 setVal={(val) => stateDispatch({ type: "from", payload: val })}
-                // searchParam={searchParam}
-                // setsearchParam={setsearchParam}
                 to={to}
               />
             </FormControl>
@@ -301,10 +254,7 @@ export default function TableData() {
             <FormControl sx={{ m: 1, minWidth: 200 }}>
               <DatePickup
                 lable={"To Date"}
-                // searchParam={searchParam}
-                // setsearchParam={setsearchParam}
                 val={to}
-                // setVal={setTo}
                 setVal={(val) => stateDispatch({ type: "to", payload: val })}
                 from={from}
               />
