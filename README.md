@@ -11,7 +11,7 @@ Runs the app in the development mode.
 Open http://localhost:3000 to view it in your browser.
 
 To check the deployment.
-Open https://warm-haupia-d535eb.netlify.app/ to view it in your browser.
+Open https://logger-dashboard.netlify.app/ to view it in your browser.
 
 The page will reload when you make changes.
 You may also see any lint errors in the console.
