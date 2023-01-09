@@ -1,5 +1,3 @@
-PFA is the link for the application: https://logger-dashboard.netlify.app/
-
 Getting Started with Create React App
 This project was bootstrapped with Create React App.
 
